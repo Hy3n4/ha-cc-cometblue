@@ -118,6 +118,19 @@ class CometBlueStates():
         self.last_talked = None
 
     @property
+    def temperature_value(self):
+        val = {
+            'manual_temp': self.target_temp,
+            'current_temp': self.temperature,
+            'target_temp_l': 16,
+            'target_temp_h': 21,
+            'offset_temp': 0.0,
+            'window_open_detection': 12,
+            'window_open_minutes': 10
+        }
+        return val
+
+    @property
     def mode_value(self):
         val = {
             'not_ready': None,
@@ -323,6 +336,7 @@ class CometBlueThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
+        get_temperatures = True
         _LOGGER.info("Update called {}".format(self._mac))
         self._thermostat.connect()
         self._thermostat.attempt_to_get_ready()
@@ -332,35 +346,30 @@ class CometBlueThermostat(ClimateDevice):
                 device.set_status(self._target.mode_value)
             if self._current.target_temp != self._target.target_temp and self._target.target_temp is not None:
                 # TODO: Fix temperature settings. Currently not working.
-                temps = {
-                    'manual_temp': self._target.target_temp,
-                    'target_temp_l': 16,
-                    'target_temp_h': 21,
-                    'offset_temp': 0.0,
-                    'window_open_detection': 12,
-                    'window_open_minutes': 10
-                }
-                _LOGGER.info("Values to set: {}".format(str(temps)))
+
+                _LOGGER.info("Values to set: {}".format(str(self._target.temperature_value)))
                 _LOGGER.debug("Setting temperature to: {}".format(self._target.target_temp))
-                device.set_temperatures(temps)
+                device.set_temperatures(self._target.temperature_value)
+                get_temperatures = False
             cur_batt = device.get_battery()
+            _LOGGER.debug("Current Battery Level: {}%".format(cur_batt))
             cur_status = device.get_status()
             cur_temps = device.get_temperatures()
+            if cur_temps['current_temp'] != -64.0:
+                self._current.temperature = cur_temps['current_temp']
+            self._current.target_temp = cur_temps['manual_temp']
+            _LOGGER.debug("Current Temperature: {}".format(cur_temps))
             if self._current.model_no is None:
                 self._current.model_no = device.get_model_number()
                 self._current.firmware_rev = device.get_firmware_revision()
                 self._current.software_rev = device.get_software_revision()
                 self._current.manufacturer = device.get_manufacturer_name()
-            _LOGGER.debug("Current Battery Level: {}%".format(cur_batt))
-            _LOGGER.debug("Current Temperature: {}".format(cur_temps))
-            _LOGGER.debug("Current Mode: {}".format(cur_status))
-            _LOGGER.debug("Current Model Number: {}".format(self._current.model_no))
-            _LOGGER.debug("Current Firmware Revision: {}".format(self._current.firmware_rev))
-            _LOGGER.debug("Current Software Revision: {}".format(self._current.software_rev))
-            _LOGGER.debug("Current Manufacturer Name: {}".format(self._current.manufacturer))
+                _LOGGER.debug("Current Mode: {}".format(cur_status))
+                _LOGGER.debug("Current Model Number: {}".format(self._current.model_no))
+                _LOGGER.debug("Current Firmware Revision: {}".format(self._current.firmware_rev))
+                _LOGGER.debug("Current Software Revision: {}".format(self._current.software_rev))
+                _LOGGER.debug("Current Manufacturer Name: {}".format(self._current.manufacturer))
         self._thermostat.disconnect()
-        self._current.temperature = cur_temps['current_temp']
-        self._current.target_temp = cur_temps['manual_temp']
         if self._current.target_temp is not None:
             self._target.target_temp = self._current.target_temp
         self._current.battery_level = cur_batt
