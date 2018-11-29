@@ -16,7 +16,7 @@ Please follow installation origianl notes: https://github.com/xrucka/cometblue#i
 
 If you are using venv you have to enable homeassistant user to use bluettoth dbus
 so add this:
- ```
+ ``` xml
 <policy user="homeassistant">
     <allow send_destination="org.bluez"/>
 </policy>
@@ -24,7 +24,7 @@ so add this:
 to config file `/etc/dbus-1/system.d/bluetooth.conf`
 
 But you should add it before default `deny` section.
-```
+``` xml
   <policy context="default">
     <deny send_destination="org.bluez"/>
   </policy>
