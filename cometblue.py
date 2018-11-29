@@ -60,7 +60,6 @@ ATTR_FIRMWARE = 'firmware'
 ATTR_VERSION = 'version'
 ATTR_WINDOW = 'window_open'
 
-
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
     vol.Optional(CONF_PIN, default=0): cv.positive_int,
@@ -71,8 +70,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
-# SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW)
-# SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW)
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
 from cometblue import device as cometblue_dev
@@ -122,13 +119,19 @@ class CometBlueStates():
 
     @property
     def mode_value(self):
-        val = 0
-        if self.manual:
-            val |= self.BIT_MANUAL
-        if self.window:
-            val |= self.BIT_WINDOW
-        if self.locked:
-            val |= self.BIT_LOCKED
+        val = {
+            'not_ready': None,
+            'childlock': self.locked,
+            'state_as_dword': None,
+            'manual_mode': self.manual,
+            'adapting': None,
+            'unused_bits': None,
+            'low_battery': None,
+            'antifrost_activated': None,
+            'motor_moving': None,
+            'installing': None,
+            'satisfied': None
+        }
         return val
 
     @mode_value.setter
@@ -183,7 +186,6 @@ class CometBlueStates():
     @temperature.setter
     def temperature(self, value):
         if value is not None and 8 <= 28:
-            _LOGGER.debug('???Setting temperature: {}'.format(value))
             self._temperature = value
 
 
@@ -215,7 +217,7 @@ class CometBlueThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
-        return self.is_stale()
+        return True
 
     @property
     def name(self):
@@ -251,7 +253,7 @@ class CometBlueThermostat(ClimateDevice):
             temperature = self.min_temp
         if temperature > self.max_temp:
             temperature = self.max_temp
-        self._target.temperature = temperature
+        self._target.target_temp = temperature
 
     @property
     def min_temp(self):
@@ -280,7 +282,8 @@ class CometBlueThermostat(ClimateDevice):
         self._target.mode_code = operation_mode
 
     def is_stale(self):
-        _LOGGER.info("{} last seen {} last talked {}".format(self._mac, self._current.last_seen, self._current.last_talked))
+        _LOGGER.info(
+            "{} last seen {} last talked {}".format(self._mac, self._current.last_seen, self._current.last_talked))
         now = datetime.now()
         if self._current.last_seen is not None and (now - self._current.last_seen).total_seconds() < 600:
             return False
@@ -321,15 +324,6 @@ class CometBlueThermostat(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         _LOGGER.info("Update called {}".format(self._mac))
-        temps = {
-            'manual_temp': self._target.temperature,
-            'target_temp_l': None,
-            'target_temp_h': None,
-            'offset_temp': None,
-            'window_open_detection': None,
-            'window_open_minutes': None
-        }
-        _LOGGER.info("Values to set: {}".format(str(temps)))
         self._thermostat.connect()
         self._thermostat.attempt_to_get_ready()
         with self._thermostat as device:
@@ -337,6 +331,16 @@ class CometBlueThermostat(ClimateDevice):
                 _LOGGER.debug("Setting mode to: {}".format(self._target.mode_value))
                 device.set_status(self._target.mode_value)
             if self._current.target_temp != self._target.target_temp and self._target.target_temp is not None:
+                # TODO: Fix temperature settings. Currently not working.
+                temps = {
+                    'manual_temp': self._target.target_temp,
+                    'target_temp_l': 16,
+                    'target_temp_h': 21,
+                    'offset_temp': 0.0,
+                    'window_open_detection': 12,
+                    'window_open_minutes': 10
+                }
+                _LOGGER.info("Values to set: {}".format(str(temps)))
                 _LOGGER.debug("Setting temperature to: {}".format(self._target.target_temp))
                 device.set_temperatures(temps)
             cur_batt = device.get_battery()
@@ -359,7 +363,6 @@ class CometBlueThermostat(ClimateDevice):
         self._current.target_temp = cur_temps['manual_temp']
         if self._current.target_temp is not None:
             self._target.target_temp = self._current.target_temp
-        # self._target.temperature = temps['manual_temp']
         self._current.battery_level = cur_batt
         self._current.mode_value = cur_status
         self._current.last_seen = datetime.now()
