@@ -14,7 +14,7 @@ Based on work of mirko located on [Github](https://github.com/mirko/home-assista
 1. Installation of cometblue Python library
 Please follow original installation procedure at: https://github.com/xrucka/cometblue#installation
 
-1. If you are using venv in you HA installation you have to allow `homeassistant` user to use bluetooth dbus
+2. If you are using venv in you HA installation you have to allow `homeassistant` user to use bluetooth dbus
 so add this:
    ```xml
    <policy user="homeassistant">
@@ -32,8 +32,8 @@ so add this:
 
 3. Download and extract latest release of cometblue.py to your HA config path
 if you followed HA recomendations it could be done by this command:
-   ```bash
-   wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
+   ```console
+   $ wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
    ```
 
 4. Create HA config file
