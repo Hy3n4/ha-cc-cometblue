@@ -11,24 +11,24 @@ Based on work of mirko located on [Github](https://github.com/mirko/home-assista
 
 ## What works
 
-Feature | Set/Get | Status
+Feature | Get | Set
 ------- | ------- | ------
-Mode | Get | :heavy_check_mark:
-Mode | Set | :heavy_check_mark:
-Childlock | Get | :heavy_check_mark:
-Childlock | Set | :heavy_check_mark:
-Target Temperature | Get | :heavy_check_mark:
-Target Temperature | Set | :heavy_check_mark:
-Current Temperature | Get | :heavy_check_mark:
-Current Temperature | Set | :heavy_check_mark:
-Open Window Detection | Get | :heavy_multiplication_x:
-Open Window Detection | Set | :heavy_multiplication_x:
-Holiday | Get | :heavy_multiplication_x:
-Holiday | Set | :heavy_multiplication_x:
-Model | Get | :heavy_check_mark:
-Manufacturer Name | Get | :heavy_check_mark:
-Firmware Rev. | Get | :heavy_check_mark:
-Software Rev. | Get | :heavy_check_mark:
+Mode | :heavy_check_mark: | :heavy_check_mark:
+Mode | :heavy_check_mark: | :heavy_check_mark:
+Childlock | :heavy_check_mark: | :heavy_check_mark:
+Childlock | :heavy_check_mark: | :heavy_check_mark:
+Target Temperature | :heavy_check_mark: | :heavy_check_mark:
+Target Temperature | :heavy_check_mark: | :heavy_check_mark:
+Current Temperature | :heavy_check_mark: | :heavy_check_mark:
+Current Temperature | :heavy_check_mark: | :heavy_check_mark:
+Open Window Detection | :heavy_multiplication_x: | :heavy_multiplication_x:
+Open Window Detection | :heavy_multiplication_x: | :heavy_multiplication_x:
+Holiday | :heavy_multiplication_x: | :heavy_multiplication_x:
+Holiday | :heavy_multiplication_x: | :heavy_multiplication_x:
+Model | :heavy_check_mark: | :heavy_multiplication_x:
+Manufacturer Name | :heavy_check_mark: | :heavy_multiplication_x:
+Firmware Rev. | :heavy_check_mark: | :heavy_multiplication_x:
+Software Rev. | :heavy_check_mark: | :heavy_multiplication_x:
 
 ## Installation
 
