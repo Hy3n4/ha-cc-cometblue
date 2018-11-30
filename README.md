@@ -9,6 +9,27 @@ Based on work of mirko located on [Github](https://github.com/mirko/home-assista
 - RaspberryPi v3
 - cometblue Python library from [Github](https://github.com/xrucka/cometblue)
 
+## What works
+
+Feature | Set/Get | Status
+------- | ------- | ------
+Mode | Get | :heavy_check_mark:
+Mode | Set | :heavy_check_mark:
+Childlock | Get | :heavy_check_mark:
+Childlock | Set | :heavy_check_mark:
+Target Temperature | Get | :heavy_check_mark:
+Target Temperature | Set | :heavy_check_mark:
+Current Temperature | Get | :heavy_check_mark:
+Current Temperature | Set | :heavy_check_mark:
+Open Window Detection | Get | :heavy_multiplication_x:
+Open Window Detection | Set | :heavy_multiplication_x:
+Holiday | Get | :heavy_multiplication_x:
+Holiday | Set | :heavy_multiplication_x:
+Model | Get | :heavy_check_mark:
+Manufacturer Name | Get | :heavy_check_mark:
+Firmware Rev. | Get | :heavy_check_mark:
+Software Rev. | Get | :heavy_check_mark:
+
 ## Installation
 
 1. Installation of cometblue Python library
@@ -56,7 +77,17 @@ This readme file ;)
 Posibly make it a supported part of HA??
 
 ## Troubleshooting
-if you 
+If you encounter any problem you should look into hass logfile located in config dir.
+If there is no useful information turn on debugging in hass config.
+
+```yaml
+logger:
+  default: warning
+  logs:
+    homeassistant.components.climate: debug
+    custom_components.climate.cometblue: debug
+    cometblue.device: debug
+```
 
 ## Notes
-Special thanks to mirko for his work
+Special thanks to mirko for his work on [Github]()
