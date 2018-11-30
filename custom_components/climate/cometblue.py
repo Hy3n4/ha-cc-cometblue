@@ -21,6 +21,8 @@ from homeassistant.components.climate import (
     STATE_AUTO,
     STATE_HEAT,
     STATE_COOL,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_HIGH,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW,
@@ -70,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW)
 
 from cometblue import device as cometblue_dev
 
@@ -105,9 +107,12 @@ class CometBlueStates():
     def __init__(self):
         self._temperature = None
         self.target_temp = None
+        self.target_temp_l = None
+        self.target_temp_h = None
         self.manual = None
         self.locked = None
         self.window = None
+        self.low_battery = None
         self._battery_level = None
         self.manufacturer = None
         self.software_rev = None
@@ -122,8 +127,8 @@ class CometBlueStates():
         val = {
             'manual_temp': self.target_temp,
             'current_temp': self.temperature,
-            'target_temp_l': 16,
-            'target_temp_h': 21,
+            'target_temp_l': self.target_temp_l,
+            'target_temp_h': self.target_temp_h,
             'offset_temp': 0.0,
             'window_open_detection': 12,
             'window_open_minutes': 10
@@ -139,7 +144,7 @@ class CometBlueStates():
             'manual_mode': self.manual,
             'adapting': None,
             'unused_bits': None,
-            'low_battery': None,
+            'low_battery': self.low_battery,
             'antifrost_activated': None,
             'motor_moving': None,
             'installing': None,
@@ -151,6 +156,7 @@ class CometBlueStates():
     def mode_value(self, value):
         self.manual = value['manual_mode']
         self.window = False
+        self.low_battery = value['low_battery']
         self.locked = value['childlock']
 
     @property
@@ -230,7 +236,8 @@ class CometBlueThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
-        return True
+        # return True
+        return not self.is_stale()
 
     @property
     def name(self):
@@ -257,15 +264,37 @@ class CometBlueThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target.target_temp
 
+    @property
+    def target_temperature_low(self):
+        """ Return low """
+        if self._current.mode_code == STATE_AUTO or self._current.mode_code == STATE_AUTO_LOCKED:
+            return self._current.target_temp_l
+        return None
+
+    @property
+    def target_temperature_high(self):
+        """ Return low """
+        if self._current.mode_code == STATE_AUTO or self._current.mode_code == STATE_AUTO_LOCKED:
+            return self._current.target_temp_h
+        return None
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temperature = kwargs.get(ATTR_TEMPERATURE)
+        if low_temp is not None or high_temp is not None:
+            _LOGGER.debug("Low Temperature to set: {}".format(low_temp))
+            _LOGGER.debug("High Temperature to set: {}".format(high_temp))
+            self._target.target_temp_l = low_temp
+            self._target.target_temp_h = high_temp
         if temperature is None:
             return
         if temperature < self.min_temp:
             temperature = self.min_temp
         if temperature > self.max_temp:
             temperature = self.max_temp
+        _LOGGER.debug("Temperature to set: {}".format(temperature))
         self._target.target_temp = temperature
 
     @property
@@ -330,6 +359,7 @@ class CometBlueThermostat(ClimateDevice):
             ATTR_FIRMWARE: self._current.firmware_rev,
             ATTR_VERSION: self._current.software_rev,
             ATTR_BATTERY: self._current.battery_level,
+            ATTR_STATE_LOW_BAT: self._current.low_battery,
             ATTR_TARGET: self._current.target_temp,
             ATTR_WINDOW: self._current.window,
         }
@@ -344,35 +374,42 @@ class CometBlueThermostat(ClimateDevice):
             if self._current.mode_code != self._target.mode_code and self._target.manual is not None:
                 _LOGGER.debug("Setting mode to: {}".format(self._target.mode_value))
                 device.set_status(self._target.mode_value)
-            if self._current.target_temp != self._target.target_temp and self._target.target_temp is not None:
-                # TODO: Fix temperature settings. Currently not working.
-
+            if self._current.target_temp != self._target.target_temp and self._target.target_temp is not None\
+                    or self._target.target_temp_l != self._current.target_temp_l or self._target.target_temp_h != self._current.target_temp_h:
+                # TODO: Fix temperature settings. It works but there is an ugly fix for reading value immediately
+                # after change.
                 _LOGGER.info("Values to set: {}".format(str(self._target.temperature_value)))
-                _LOGGER.debug("Setting temperature to: {}".format(self._target.target_temp))
                 device.set_temperatures(self._target.temperature_value)
                 get_temperatures = False
-            cur_batt = device.get_battery()
-            _LOGGER.debug("Current Battery Level: {}%".format(cur_batt))
-            cur_status = device.get_status()
+            self._current.battery_level = device.get_battery()
+            _LOGGER.debug("Current Battery Level: {}%".format(self._current.battery_level))
+            self._current.mode_value = device.get_status()
+            # if get_temperatures:
             cur_temps = device.get_temperatures()
-            if cur_temps['current_temp'] != -64.0:
-                self._current.temperature = cur_temps['current_temp']
-            self._current.target_temp = cur_temps['manual_temp']
-            _LOGGER.debug("Current Temperature: {}".format(cur_temps))
             if self._current.model_no is None:
                 self._current.model_no = device.get_model_number()
                 self._current.firmware_rev = device.get_firmware_revision()
                 self._current.software_rev = device.get_software_revision()
                 self._current.manufacturer = device.get_manufacturer_name()
-                _LOGGER.debug("Current Mode: {}".format(cur_status))
+                _LOGGER.debug("Current Mode: {}".format(self._current.mode_value))
                 _LOGGER.debug("Current Model Number: {}".format(self._current.model_no))
                 _LOGGER.debug("Current Firmware Revision: {}".format(self._current.firmware_rev))
                 _LOGGER.debug("Current Software Revision: {}".format(self._current.software_rev))
                 _LOGGER.debug("Current Manufacturer Name: {}".format(self._current.manufacturer))
         self._thermostat.disconnect()
+        if cur_temps['current_temp'] == -64.0 or cur_temps['target_temp_l'] == -64.0 or cur_temps['target_temp_l'] == -64.0:
+            self._thermostat.connect()
+            self._thermostat.attempt_to_get_ready()
+            with self._thermostat as device:
+                self._thermostat.connect()
+                self._thermostat.attempt_to_get_ready()
+                cur_temps = device.get_temperatures()
+            self._thermostat.disconnect()
+        self._current.temperature = cur_temps['current_temp']
+        self._current.target_temp_l = cur_temps['target_temp_l']
+        self._current.target_temp_h = cur_temps['target_temp_h']
+        self._current.target_temp = cur_temps['manual_temp']
         if self._current.target_temp is not None:
             self._target.target_temp = self._current.target_temp
-        self._current.battery_level = cur_batt
-        self._current.mode_value = cur_status
         self._current.last_seen = datetime.now()
         self._current.last_talked = datetime.now()

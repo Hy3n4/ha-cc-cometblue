@@ -19,6 +19,8 @@ Target Temperature | :heavy_check_mark: | :heavy_check_mark:
 Current Temperature | :heavy_check_mark: | :heavy_check_mark:
 Open Window Detection | :heavy_multiplication_x: | :heavy_multiplication_x:
 Holiday | :heavy_multiplication_x: | :heavy_multiplication_x:
+Battery Level | :heavy_check_mark: | :heavy_minus_sign:
+Low Battery | :heavy_check_mark: | :heavy_minus_sign:
 Model | :heavy_check_mark: | :heavy_minus_sign:
 Manufacturer Name | :heavy_check_mark: | :heavy_minus_sign:
 Firmware Rev. | :heavy_check_mark: | :heavy_minus_sign:
