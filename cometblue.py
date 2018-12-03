@@ -449,4 +449,3 @@ class CometBlueThermostat(ClimateDevice):
             self._current.target_temp = self._target.target_temp
         self._current.last_seen = datetime.now()
         self._current.last_talked = datetime.now()
-
