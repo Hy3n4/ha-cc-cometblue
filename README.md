@@ -28,47 +28,78 @@ Software Rev. | :heavy_check_mark: | :heavy_minus_sign:
 
 ## Installation
 
+> Warning: If you are using venv for running hass as I do, You will probably want to shoot your brain out of your head during installation steps :wink: . Just like I did when I was creating this installation procedure.
+
+There are several steps that you will have to execute as pi/root user on the other hand some steps are better executed as homeassistant user in venv (if you are using venv, of course). Such commands will be preceeded by string `(homeassistant)$`. Otherwise execute commands as pi/root.
+
 1. Installation of cometblue Python library
 You should install git if you didn't already.
-```sh
-$ apt install git -y
-$ cd /tmp
-$ git clone https://github.com/xrucka/cometblue.git
-$ cd /cometblue
-```
-and then please follow original installation procedure at: https://github.com/xrucka/cometblue#installation
+    ```sh
+    $ apt install git -y
+    $ cd /tmp
+    $ git clone https://github.com/xrucka/cometblue.git
+    $ cd /cometblue
+    ```
+2. Follow original installation procedure at: https://github.com/xrucka/cometblue#installation
 
-1. If you are using venv in you HA installation you have to allow `homeassistant` user to use bluetooth dbus
-so add this:
-   ```xml
-   <policy user="homeassistant">
-       <allow send_destination="org.bluez"/>
-   </policy>
-   ```
-   to config file `/etc/dbus-1/system.d/bluetooth.conf`
+3. Install Dbus and some depencies for PyGObject if you didn't already
 
-   But you should add it before default `deny` section.
-   ```xml
-     <policy context="default">
-       <deny send_destination="org.bluez"/>
-     </policy>
-   ```
-
-   Restart bluetooth.service
-
+    ```sh
+    $ apt install python3-dbus libglib2.0-dev libgirepository1.0-dev libcairo2-dev
+    ```
+    Dbus will be installed globally but in case you are running hass in venv you will need to copy dbus folder and some other files to venv site-packages location
+    ```sh
+    $ locate dbus
+    ...
+    /usr/lib/python3/dist-packages/_dbus_bindings.cpython-35m-arm-linux-gnueabihf.so
+    /usr/lib/python3/dist-packages/_dbus_glib_bindings.cpython-35m-arm-linux-gnueabihf.so
+    /usr/lib/python3/dist-packages/dbus
+    ...
+    ```
+    Copy at least theese two files and one folder to 
+    `/srv/homeassistant/lib/python3.5/site-packages/` and change ownership to homeassistant user
+    
+    ```sh
+    cp -r /usr/lib/python3/dist-packages/{dbus,_dbus_bindings.cpython-35m-arm-linux-gnueabihf.so,_dbus_glib_bindings.cpython-35m-arm-linux-gnueabihf.so} /srv/homeassistant/lib/python3.5/site-packages/
+    ```
+4. Install PyGObject
    ```sh
-   $ systemctl restart bluetooth.service
+   (homeassistant)$ pip3 install pygobject
    ```
 
-2. Download and extract latest release of cometblue.py to your HA config path.
+5. If you are using venv in you HA installation you have to allow `homeassistant` user to use bluetooth dbus
+so add this:
+    ```xml
+    <policy user="homeassistant">
+        <allow send_destination="org.bluez"/>
+    </policy>
+    ```
+    to config file `/etc/dbus-1/system.d/bluetooth.conf`
+
+    But you should add it before default `deny` section.
+    ```xml
+      <policy context="default">
+        <deny send_destination="org.bluez"/>
+      </policy>
+    ```
+
+    Restart bluetooth.service
+
+    ```sh
+    $ systemctl restart bluetooth.service
+    ```
+
+6. Download and extract latest release of cometblue.py to your HA config path.
 If you followed HA recomendations it could be done by this command:
    ```console
-   $ wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
-   $ chown -R homeassistant:homeassistant /home/homeassistant/.homeassistant/custom_components/
+   (homeassistant)$ wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
+   (homeassistant)$ chown -R homeassistant:homeassistant /home/homeassistant/.homeassistant/custom_components/
    ```
    > At this moment you have to change ownership of downloaded files!
 
-3. Create HA config file
+7. Copy dbus folder from it's original location (this issue is discussed [here](https://github.com/getsenic/gatt-python/issues/31))
+
+8. Create HA config file
 
    ```yaml
    platform: cometblue
@@ -77,7 +108,7 @@ If you followed HA recomendations it could be done by this command:
        mac: 00:00:00:00:00:00
    ```
 
-4. Check config witthin Home Assistant and restart HA
+9. Check config within Home Assistant and restart HA
 
 ## Links
 https://github.com/xrucka/cometblue
