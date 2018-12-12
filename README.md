@@ -29,9 +29,16 @@ Software Rev. | :heavy_check_mark: | :heavy_minus_sign:
 ## Installation
 
 1. Installation of cometblue Python library
-Please follow original installation procedure at: https://github.com/xrucka/cometblue#installation
+You should install git if you didn't already.
+```sh
+$ apt install git -y
+$ cd /tmp
+$ git clone https://github.com/xrucka/cometblue.git
+$ cd /cometblue
+```
+and then please follow original installation procedure at: https://github.com/xrucka/cometblue#installation
 
-2. If you are using venv in you HA installation you have to allow `homeassistant` user to use bluetooth dbus
+1. If you are using venv in you HA installation you have to allow `homeassistant` user to use bluetooth dbus
 so add this:
    ```xml
    <policy user="homeassistant">
@@ -47,13 +54,21 @@ so add this:
      </policy>
    ```
 
-3. Download and extract latest release of cometblue.py to your HA config path
-if you followed HA recomendations it could be done by this command:
-   ```console
-   $ wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
+   Restart bluetooth.service
+
+   ```sh
+   $ systemctl restart bluetooth.service
    ```
 
-4. Create HA config file
+2. Download and extract latest release of cometblue.py to your HA config path.
+If you followed HA recomendations it could be done by this command:
+   ```console
+   $ wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
+   $ chown -R homeassistant:homeassistant /home/homeassistant/.homeassistant/custom_components/
+   ```
+   > At this moment you have to change ownership of downloaded files!
+
+3. Create HA config file
 
    ```yaml
    platform: cometblue
@@ -62,7 +77,7 @@ if you followed HA recomendations it could be done by this command:
        mac: 00:00:00:00:00:00
    ```
 
-5. Check config witthin Home Assistant and restart HA
+4. Check config witthin Home Assistant and restart HA
 
 ## Links
 https://github.com/xrucka/cometblue
