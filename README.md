@@ -36,9 +36,9 @@ There are several steps that you will have to execute as pi/root user on the oth
 You should install git if you didn't already.
     ```sh
     $ apt install git -y
-    $ cd /tmp
-    $ git clone https://github.com/xrucka/cometblue.git
-    $ cd /cometblue
+    (homeassistant)$ cd /tmp
+    (homeassistant)$ git clone https://github.com/xrucka/cometblue.git
+    (homeassistant)$ cd /cometblue
     ```
 2. Follow original installation procedure at: https://github.com/xrucka/cometblue#installation
 
