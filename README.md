@@ -38,7 +38,7 @@ You should install git if you didn't already.
     $ apt install git -y
     (homeassistant)$ cd /tmp
     (homeassistant)$ git clone https://github.com/xrucka/cometblue.git
-    (homeassistant)$ cd /cometblue
+    (homeassistant)$ cd cometblue
     ```
 2. Follow original installation procedure at: https://github.com/xrucka/cometblue#installation
 
