@@ -58,6 +58,8 @@ You should install git if you didn't already.
     ```
     Copy at least theese two files and one folder to 
     `/srv/homeassistant/lib/python3.5/site-packages/` and change ownership to homeassistant user
+
+    Or you can just use `--system-site-packages` switch when you are creating `venv`. If you have `venv` already created and you want to use system site packages, you can always remove the file `no-global-site-packages.txt` from your `venv` location. More info in [venv docs](https://virtualenv.pypa.io/en/stable/userguide/#the-system-site-packages-option). Thanks to [@danielkucera](https://github.com/Hy3n4/ha-cc-cometblue/issues/3#issue-397075446) to point that out.
     
     ```sh
     cp -r /usr/lib/python3/dist-packages/{dbus,_dbus_bindings.cpython-35m-arm-linux-gnueabihf.so,_dbus_glib_bindings.cpython-35m-arm-linux-gnueabihf.so} /srv/homeassistant/lib/python3.5/site-packages/
