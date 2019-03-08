@@ -91,11 +91,11 @@ so add this:
     $ systemctl restart bluetooth.service
     ```
 
-6. Download and extract latest release of cometblue.py to your HA config path.
+6. Checkout latest version of cometblue module to your HA config path.
 If you followed HA recomendations it could be done by this command:
    ```console
-   (homeassistant)$ wget -c https://github.com/Hy3n4/ha-cc-cometblue/releases/download/v0.0.1-alpha/cometblue.tar.gz -O - | tar -xz -C /home/homeassistant/.homeassistant/
-   (homeassistant)$ chown -R homeassistant:homeassistant /home/homeassistant/.homeassistant/custom_components/
+   (homeassistant)$ cd /home/homeassistant/.homeassistant/custom_components/
+   (homeassistant)$ git clone https://github.com/Hy3n4/ha-cc-cometblue cometblue
    ```
    > At this moment you have to change ownership of downloaded files!
 
