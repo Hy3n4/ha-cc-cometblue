@@ -239,7 +239,6 @@ class CometBlueThermostat(ClimateDevice):
         self._thermostat = cometblue_dev.CometBlue(_mac, gatt_mgr, _pin)
         self._target = CometBlueStates()
         self._current = CometBlueStates()
-        self.update()
 
     # def __del__(self):
     #    self._thermostat.disconnect()
@@ -384,66 +383,67 @@ class CometBlueThermostat(ClimateDevice):
         """Update the data from the thermostat."""
         get_temperatures = True
         _LOGGER.info("Update called {}".format(self._mac))
-        self._thermostat.connect()
-        self._thermostat.attempt_to_get_ready()
-        with self._thermostat as device:
-            if self._current.mode_code != self._target.mode_code and self._target.manual is not None:
-                _LOGGER.debug("Setting mode to: {}".format(self._target.mode_value))
-                device.set_status(self._target.mode_value)
-            _LOGGER.debug("_current.target_temp: {}".format(self._current.target_temp))
-            _LOGGER.debug("_current.target_temp diff: {}".format(
-                self._current.target_temp != self._target.target_temp)
-            )
-            _LOGGER.debug("_current.target_temp_h diff: {}".format(
-                self._current.target_temp_h != self._target.target_temp_h)
-            )
-            _LOGGER.debug("_current.target_temp_l diff: {}".format(
-                self._current.target_temp_l != self._target.target_temp_l)
-            )
-            if self._current.target_temp != self._target.target_temp and self._target.target_temp is not None\
-                    or (self._target.target_temp_l != self._current.target_temp_l
-                        and self._target.target_temp_l is not None) \
-                    or (self._target.target_temp_h != self._current.target_temp_h
-                        and self._target.target_temp_h is not None):
-                # TODO: Fix temperature settings. It works but there is an ugly fix for reading value immediately
-                # after change.
-                _LOGGER.info("Values to set: {}".format(str(self._target.temperature_value)))
-                device.set_temperatures(self._target.temperature_value)
-                get_temperatures = False
-            self._current.battery_level = device.get_battery()
-            _LOGGER.debug("Current Battery Level: {}%".format(self._current.battery_level))
-            self._current.mode_value = device.get_status()
-            self._current.holidays = device.get_holidays()
-            cur_temps = device.get_temperatures()
-            _LOGGER.debug("target_temp_h: {}".format(cur_temps['target_temp_h']))
-            _LOGGER.debug("target_temp_l: {}".format(cur_temps['target_temp_l']))
-            _LOGGER.debug("current_temp: {}".format(cur_temps['current_temp']))
-            if cur_temps['current_temp'] != -64.0 \
-                    or cur_temps['target_temp_l'] != -64.0 \
-                    or cur_temps['target_temp_h'] != -64.0:
-                _LOGGER.debug('Setting _current.temperature: {}'.format(cur_temps['current_temp']))
-                self._current.temperature = cur_temps['current_temp']
-                _LOGGER.debug('Current _current.temperature: {}'.format(self._current.temperature))
-                self._current.target_temp_l = cur_temps['target_temp_l']
-                self._current.target_temp_h = cur_temps['target_temp_h']
-                _LOGGER.debug('Setting _current.target_temp: {}'.format(cur_temps['manual_temp']))
-                self._current.target_temp = cur_temps['manual_temp']
-                if self._target.target_temp is None:
-                    self._target.target_temp = cur_temps['manual_temp']
-                _LOGGER.debug('Current _current.target_temp: {}'.format(self._current.target_temp))
-            if self._current.model_no is None:
-                self._current.model_no = device.get_model_number()
-                self._current.firmware_rev = device.get_firmware_revision()
-                self._current.software_rev = device.get_software_revision()
-                self._current.manufacturer = device.get_manufacturer_name()
-                _LOGGER.debug("Current Mode: {}".format(self._current.mode_value))
-                _LOGGER.debug("Current Model Number: {}".format(self._current.model_no))
-                _LOGGER.debug("Current Firmware Revision: {}".format(self._current.firmware_rev))
-                _LOGGER.debug("Current Software Revision: {}".format(self._current.software_rev))
-                _LOGGER.debug("Current Manufacturer Name: {}".format(self._current.manufacturer))
+        try:
+            with self._thermostat as device:
+                if self._current.mode_code != self._target.mode_code and self._target.manual is not None:
+                    _LOGGER.debug("Setting mode to: {}".format(self._target.mode_value))
+                    device.set_status(self._target.mode_value)
+                _LOGGER.debug("_current.target_temp: {}".format(self._current.target_temp))
+                _LOGGER.debug("_current.target_temp diff: {}".format(
+                    self._current.target_temp != self._target.target_temp)
+                )
+                _LOGGER.debug("_current.target_temp_h diff: {}".format(
+                    self._current.target_temp_h != self._target.target_temp_h)
+                )
+                _LOGGER.debug("_current.target_temp_l diff: {}".format(
+                    self._current.target_temp_l != self._target.target_temp_l)
+                )
+                if self._current.target_temp != self._target.target_temp and self._target.target_temp is not None\
+                        or (self._target.target_temp_l != self._current.target_temp_l
+                            and self._target.target_temp_l is not None) \
+                        or (self._target.target_temp_h != self._current.target_temp_h
+                            and self._target.target_temp_h is not None):
+                    # TODO: Fix temperature settings. It works but there is an ugly fix for reading value immediately
+                    # after change.
+                    _LOGGER.info("Values to set: {}".format(str(self._target.temperature_value)))
+                    device.set_temperatures(self._target.temperature_value)
+                    get_temperatures = False
+                self._current.battery_level = device.get_battery()
+                _LOGGER.debug("Current Battery Level: {}%".format(self._current.battery_level))
+                self._current.mode_value = device.get_status()
+                self._current.holidays = device.get_holidays()
+                cur_temps = device.get_temperatures()
+                _LOGGER.debug("target_temp_h: {}".format(cur_temps['target_temp_h']))
+                _LOGGER.debug("target_temp_l: {}".format(cur_temps['target_temp_l']))
+                _LOGGER.debug("current_temp: {}".format(cur_temps['current_temp']))
+                if cur_temps['current_temp'] != -64.0 \
+                        or cur_temps['target_temp_l'] != -64.0 \
+                        or cur_temps['target_temp_h'] != -64.0:
+                    _LOGGER.debug('Setting _current.temperature: {}'.format(cur_temps['current_temp']))
+                    self._current.temperature = cur_temps['current_temp']
+                    _LOGGER.debug('Current _current.temperature: {}'.format(self._current.temperature))
+                    self._current.target_temp_l = cur_temps['target_temp_l']
+                    self._current.target_temp_h = cur_temps['target_temp_h']
+                    _LOGGER.debug('Setting _current.target_temp: {}'.format(cur_temps['manual_temp']))
+                    self._current.target_temp = cur_temps['manual_temp']
+                    if self._target.target_temp is None:
+                        self._target.target_temp = cur_temps['manual_temp']
+                    _LOGGER.debug('Current _current.target_temp: {}'.format(self._current.target_temp))
+                if self._current.model_no is None:
+                    self._current.model_no = device.get_model_number()
+                    self._current.firmware_rev = device.get_firmware_revision()
+                    self._current.software_rev = device.get_software_revision()
+                    self._current.manufacturer = device.get_manufacturer_name()
+                    _LOGGER.debug("Current Mode: {}".format(self._current.mode_value))
+                    _LOGGER.debug("Current Model Number: {}".format(self._current.model_no))
+                    _LOGGER.debug("Current Firmware Revision: {}".format(self._current.firmware_rev))
+                    _LOGGER.debug("Current Software Revision: {}".format(self._current.software_rev))
+                    _LOGGER.debug("Current Manufacturer Name: {}".format(self._current.manufacturer))
+                if self._target.target_temp is not None:
+                    self._current.target_temp = self._target.target_temp
+                self._current.last_seen = datetime.now()
+                self._current.last_talked = datetime.now()
+        except Exception as e:
+            _LOGGER.warning("Update exception: " + str(e))
         self._thermostat.disconnect()
-        if self._target.target_temp is not None:
-            self._current.target_temp = self._target.target_temp
-        self._current.last_seen = datetime.now()
-        self._current.last_talked = datetime.now()
 
