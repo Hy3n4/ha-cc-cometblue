@@ -104,10 +104,15 @@ If you followed HA recomendations it could be done by this command:
 8. Create HA config file
 
    ```yaml
-   platform: cometblue
-   devices:
-     living_room_cb:
-       mac: 00:00:00:00:00:00
+   climate:
+      - platform: cometblue
+        devices:
+          living_room_left:
+            mac: DE:AD:BE:EF:23:42
+            #pin: 0000 # default
+          living_room_right:
+            mac: DE:AD:BE:EF:42:23
+            pin: 1234
    ```
 
 9. Check config within Home Assistant and restart HA
