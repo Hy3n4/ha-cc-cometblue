@@ -15,15 +15,17 @@ from sys import stderr
 
 from homeassistant.components.climate import (
     ClimateDevice,
-    PLATFORM_SCHEMA,
-    STATE_ON,
-    STATE_OFF,
+    PLATFORM_SCHEMA)
+from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE)
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    #CURRENT_HVAC_HEAT,
+    #CURRENT_HVAC_OFF,
+    #HVAC_MODE_OFF,
+    #HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT)
 from homeassistant.const import (
     CONF_NAME,
     CONF_MAC,
@@ -31,7 +33,9 @@ from homeassistant.const import (
     CONF_DEVICES,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE,
-    PRECISION_HALVES)
+    PRECISION_HALVES,
+    STATE_ON,
+    STATE_OFF)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -70,8 +74,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
-SUPPORT_FLAGS = (SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE_HIGH
-                 | SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_AWAY_MODE)
+HVAC_FLAGS = (HVAC_MODE_HEAT,)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
 
 gatt_mgr = None
 
@@ -232,7 +236,7 @@ class CometBlueThermostat(ClimateDevice):
 
         global gatt_mgr
 
-        self.modes = [STATE_AUTO, STATE_AUTO_LOCKED, STATE_MANUAL, STATE_MANUAL_LOCKED]
+        self._hvac_mode = HVAC_MODE_HEAT
         self._mac = _mac
         self._name = _name
         self._pin = _pin
@@ -247,6 +251,22 @@ class CometBlueThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
+
+    @property
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return self._hvac_mode
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return HVAC_FLAGS
 
     @property
     def available(self) -> bool:
@@ -332,7 +352,7 @@ class CometBlueThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return self.modes
+        return HVAC_FLAGS
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
