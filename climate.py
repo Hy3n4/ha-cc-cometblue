@@ -21,7 +21,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    #CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     #CURRENT_HVAC_OFF,
     #HVAC_MODE_OFF,
     #HVAC_MODE_AUTO,
@@ -267,6 +268,13 @@ class CometBlueThermostat(ClimateDevice):
         Need to be a subset of HVAC_MODES.
         """
         return HVAC_FLAGS
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation."""
+        if self.current_temperature < self.target_temperature:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def available(self) -> bool:
